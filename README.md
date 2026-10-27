@@ -3,6 +3,8 @@
 Loja virtual (e-commerce) de mangás feita para a atividade avaliativa de **Criação de Sites**.
 A Seshat vende mangás de todos os gêneros e edições raras para colecionadores, com identidade visual própria criada no Figma.
 
+🔗 **Site online:** https://cavmferwi.github.io/seshat/
+
 ## Como executar
 
 Não precisa instalar nada.

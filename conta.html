@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Minha conta — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <nav class="wrap crumbs" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Minha conta</span></nav>
+    <section class="page-head"><div class="wrap">
+      <div><h1>Minha conta</h1><p>Acompanhe seus pedidos, dados de entrega e favoritos em um só lugar.</p></div>
+      <div class="count"><strong data-n-pedidos></strong><span>pedidos</span></div>
+    </div></section>
+    <div class="wrap account" id="conta"></div>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const user = store.get('user', null);
+    if (!user) location.replace('login.html?volta=conta.html');
+    mountLayout();
+    const aba = ['dados', 'enderecos'].includes(params.get('aba')) ? params.get('aba') : 'pedidos';
+    $('[data-n-pedidos]').textContent = PEDIDOS.length;
+    const dados = store.get('dados', { nome: 'Ana Souza', email: 'ana.souza@email.com', cpf: '123.456.789-00', cel: '(51) 99876-5432', nasc: '14/03/1998' });
+    if (user && user.email !== 'ana.souza@email.com') Object.assign(dados, { nome: user.nome, email: user.email });
+    const enderecos = [['Casa · principal', 'Rua das Palmeiras, 120 — Bela Vista, São Paulo/SP — CEP 01319-900'], ['Trabalho', 'Av. Paulista, 1000, 12º andar — Bela Vista, São Paulo/SP — CEP 01310-100']];
+    const badge = s => `<span class="badge ${s === 'Entregue' ? 'entregue' : 'preparo'}">${s}</span>`;
+
+    const conteudo = {
+      pedidos: () => `
+        <div class="stats">
+          <div class="stat"><b>${PEDIDOS.length}</b><span>Pedidos realizados</span></div>
+          <div class="stat"><b>${favs.all().length}</b><span>Favoritos</span></div>
+          <div class="stat"><b>10% OFF</b><span>Cupom de boas-vindas: ${CUPOM}</span></div>
+        </div>
+        <h2>Meus pedidos</h2>
+        ${PEDIDOS.map(o => `<div class="order">
+          <div class="covers">${o.itens.map(([id]) => `<img src="${capa(produto(id))}" alt="">`).join('')}</div>
+          <div class="meta"><b>#${o.id}</b><span>${o.data} · ${o.itens.length} ${o.itens.length === 1 ? 'item' : 'itens'}</span></div>
+          ${badge(o.status)}<b>${brl(o.total)}</b>
+          <a class="btn-line-gold" href="pedido.html?id=${o.id}">Ver detalhes</a>
+        </div>`).join('')}
+        <div class="panel"><h3 style="font-size:16px;font-weight:600">Endereço principal</h3><p>${enderecos[0][1]}</p></div>`,
+      dados: () => `<h2>Dados pessoais</h2>
+        <div class="panel" style="padding:28px"><form id="f-dados" novalidate>
+          <h3 style="font-size:16px;font-weight:600">Informações da conta</h3>
+          ${[['nome', 'Nome completo', 'text'], ['email', 'E-mail', 'email'], ['cpf', 'CPF', 'text'], ['cel', 'Celular', 'tel'], ['nasc', 'Data de nascimento', 'text']].map(([k, l, t]) =>
+            `<div class="field"><label for="${k}">${l}</label><input class="input" id="${k}" type="${t}" value="${esc(dados[k])}"></div>`).join('')}
+          <button class="btn btn-dark" style="align-self:flex-start;min-width:382px;max-width:100%">Salvar alterações</button>
+        </form></div>`,
+      enderecos: () => `<h2>Endereços</h2>
+        ${enderecos.map(([t, e]) => `<div class="panel"><h3 style="font-size:16px;font-weight:600">${t}</h3><p>${e}</p></div>`).join('')}`,
+    };
+    $('#conta').innerHTML = accountMenu(aba) + `<div class="acc-content">${conteudo[aba]()}</div>`;
+    $('#f-dados')?.addEventListener('submit', e => {
+      e.preventDefault();
+      const novo = {}; ['nome', 'email', 'cpf', 'cel', 'nasc'].forEach(k => novo[k] = $('#' + k).value.trim());
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(novo.email)) { $('#email').classList.add('erro'); return toast('E-mail inválido'); }
+      $('#email').classList.remove('erro');
+      store.set('dados', novo); store.set('user', { nome: novo.nome, email: novo.email });
+      toast('Dados salvos');
+    });
+  </script>
+</body>
+</html>

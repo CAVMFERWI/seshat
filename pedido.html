@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pedido — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <nav class="wrap crumbs" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><a href="conta.html">Minha conta</a><span class="sep">/</span><span data-id></span></nav>
+    <section class="page-head"><div class="wrap">
+      <div><h1 data-titulo></h1><p data-sub></p></div>
+      <div class="count"><strong data-etapa></strong><span>de 5 etapas</span></div>
+    </div></section>
+    <div class="wrap account" id="pedido"></div>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    mountLayout();
+    const o = PEDIDOS.find(x => x.id === params.get('id')) || PEDIDOS[0];
+    const entregue = o.status === 'Entregue';
+    document.title = `Pedido #${o.id} — Seshat`;
+    $('[data-id]').textContent = `#${o.id}`;
+    $('[data-titulo]').textContent = entregue ? 'Detalhes do pedido' : 'Acompanhar pedido';
+    $('[data-sub]').textContent = `Pedido #${o.id} · feito em ${o.data} · ${entregue ? 'entregue em ' + o.entregue : 'previsão de entrega ' + o.previsao}`;
+    $('[data-etapa]').textContent = o.etapa;
+    const badge = `<span class="badge ${entregue ? 'entregue' : 'preparo'}">${o.status}</span>`;
+    const passos = o.etapas.map(([t, d], i) => {
+      const n = i + 1, estado = n < o.etapa || entregue ? 'feito' : n === o.etapa ? 'atual' : 'futuro';
+      return `<div class="step ${estado}"><div class="dot-row"><span class="bar ${n <= o.etapa ? 'on' : ''}"></span><span class="dot">${estado === 'feito' ? '✓' : n}</span><span class="bar ${n < o.etapa ? 'on' : ''}"></span></div><div><b>${t}</b><br><span>${d}</span></div></div>`;
+    }).join('');
+    $('#pedido').innerHTML = accountMenu('pedidos') + `<div class="acc-content">
+      <a href="conta.html" class="back-link">← Voltar para Meus pedidos</a>
+      <section class="panel" style="gap:24px"><div class="row-between"><h2>Status do pedido</h2>${badge}</div><div class="steps">${passos}</div></section>
+      <div class="order-grid">
+        <section class="panel" style="gap:16px"><h3>Itens do pedido (${o.itens.length})</h3>
+          ${o.itens.map(([id, q, v]) => { const p = produto(id); return `<div class="line-item"><img src="${capa(p)}" alt=""><div><a href="produto.html?id=${id}"><b>${esc(p.titulo)}</b></a><span>${p.autor} · ${q} un.</span></div><b>${brl(v)}</b></div>`; }).join('')}
+        </section>
+        <div class="order-side">
+          <section class="panel"><h3>Entrega</h3><p>Rua das Acácias, 120 · Apto 34<br>Centro · Porto Alegre, RS<br>CEP 90010-000</p><b style="font-size:14px">Correios · PAC</b></section>
+          <section class="panel"><h3>Resumo</h3>
+            <div class="sum-row">Subtotal <b style="font-weight:700">${brl(o.total)}</b></div>
+            <div class="sum-row">Frete <b style="font-weight:700">Grátis</b></div>
+            <div class="sum-row">Pagamento <b style="font-weight:700">${o.etapas[1][1].split('· ').pop()}</b></div>
+            <div class="sum-row" style="font-size:16px;font-weight:700;color:var(--ink)">Total <b style="font-weight:700">${brl(o.total)}</b></div>
+          </section>
+          <button class="btn-line-gold" style="padding:12px;font-size:14px" id="ajuda">Preciso de ajuda com este pedido</button>
+        </div>
+      </div></div>`;
+
+    const resumo = `<div class="order-mini"><div><b>Pedido #${o.id}</b><span>${o.itens.length} ${o.itens.length === 1 ? 'item' : 'itens'} · ${brl(o.total)}</span></div>${badge}</div>`;
+    const motivos = ['Quero mudar o endereço de entrega', 'Quero cancelar o pedido', 'O pedido está atrasado', 'Recebi um item errado ou danificado', 'Outro assunto'];
+    $('#ajuda').onclick = () => {
+      const ov = overlay('ajuda-pedido', `<aside class="drawer" role="dialog" aria-modal="true" aria-label="Ajuda com o pedido">
+        <div class="drawer-head"><h2>Ajuda com o pedido</h2><button class="close" data-close aria-label="Fechar">✕</button></div>
+        ${resumo}
+        <form id="f-ajuda" style="display:flex;flex-direction:column;gap:20px">
+          <fieldset style="border:0;display:flex;flex-direction:column;gap:8px"><legend style="font-weight:700;margin-bottom:12px">Qual é o problema?</legend>
+            ${motivos.map((m, i) => `<label class="opt"><input type="radio" name="motivo" value="${m}" ${i ? '' : 'checked'}> ${m}</label>`).join('')}</fieldset>
+          <label style="font-weight:700;display:flex;flex-direction:column;gap:12px">Conte o que aconteceu (opcional)<textarea class="input" placeholder="Ex.: mudei de endereço, o novo é Rua…" style="font-weight:400"></textarea></label>
+          <button class="btn btn-dark btn-block">Enviar mensagem</button>
+          <button type="button" class="btn btn-outline btn-block" data-close style="font-size:15px">Cancelar</button>
+          <small style="color:var(--muted);font-size:13px">Respondemos em até 24 horas úteis no seu e-mail.</small>
+        </form></aside>`);
+      $('#f-ajuda', ov).onsubmit = e => {
+        e.preventDefault();
+        const motivo = $('input[name="motivo"]:checked', ov).value;
+        overlay('ajuda-pedido', `<aside class="drawer" role="dialog" aria-modal="true" aria-label="Mensagem enviada">
+          <div class="drawer-head"><h2>Mensagem enviada</h2><button class="close" data-close aria-label="Fechar">✕</button></div>
+          <div class="big-check" style="width:72px;height:72px;font-size:34px">✓</div>
+          <b style="font-weight:600">Recebemos seu pedido de ajuda sobre "${esc(motivo)}".</b>
+          <p style="color:var(--muted);font-size:14px;line-height:1.5">Protocolo #AJ-${String(Date.now()).slice(-5)}. Vamos responder em até 24 horas úteis no seu e-mail. Enquanto isso, o pedido continua ${entregue ? 'registrado' : 'em preparo'}.</p>
+          ${resumo}
+          <button class="btn btn-dark btn-block" data-close>Voltar ao pedido</button></aside>`);
+      };
+    };
+  </script>
+</body>
+</html>

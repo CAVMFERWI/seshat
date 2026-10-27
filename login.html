@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Entrar — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <main class="auth" id="conteudo">
+    <section class="auth-brand">
+      <div id="marca"></div>
+      <div>
+        <h1>Cada estante começa<br>com um primeiro volume.</h1>
+        <p>Entre na Seshat para salvar seus favoritos, acompanhar pedidos e receber avisos de raridades.</p>
+      </div>
+      <div class="auth-covers">
+        <img src="img/capas/frieren-01.jpg" alt=""><img src="img/capas/uzumaki-luxo.jpg" alt=""><img src="img/capas/nana-01.jpg" alt=""><img src="img/capas/vagabond-01.jpg" alt="">
+      </div>
+    </section>
+    <section class="auth-side">
+      <div class="auth-card" id="card"></div>
+    </section>
+  </main>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    $('#marca').innerHTML = logo().replace(SIMBOLO, SIMBOLO_RODAPE);
+    const campo = (id, label, type, ph, ac) => `<div class="field"><label for="${id}">${label}</label><input class="input" id="${id}" type="${type}" placeholder="${ph}" autocomplete="${ac}" required></div>`;
+    const abas = m => `<div class="seg" role="tablist"><button type="button" role="tab" class="${m === 'entrar' ? 'ativo' : ''}" data-modo="entrar">Entrar</button><button type="button" role="tab" class="${m === 'criar' ? 'ativo' : ''}" data-modo="criar">Criar conta</button></div>`;
+    const google = `<div class="or">ou</div><button type="button" class="btn btn-outline btn-block" data-google style="font-size:15px">Continuar com Google</button>`;
+    const telas = {
+      entrar: () => `<h2>Bem-vindo de volta</h2><p>Entre com seu e-mail e senha para continuar.</p>
+        <div class="alert hidden" id="erro" role="alert">E-mail ou senha incorretos. Confira os dados e tente novamente.</div>
+        ${abas('entrar')}<form id="f" novalidate style="display:contents">
+        ${campo('email', 'E-mail', 'email', 'voce@email.com', 'email')}${campo('senha', 'Senha', 'password', '••••••••', 'current-password')}
+        <div class="row-between"><label class="check"><input type="checkbox" checked> Lembrar de mim</label><button type="button" class="link-gold" data-modo="esqueci" style="font-size:13px">Esqueci a senha</button></div>
+        <button class="btn btn-dark btn-block">Entrar</button></form>${google}`,
+      criar: () => `<h2>Crie sua conta</h2><p>Leva menos de um minuto. Depois é só escolher seus mangás.</p>
+        <div class="alert hidden" id="erro" role="alert">Preencha nome, um e-mail válido e uma senha com pelo menos 6 caracteres.</div>
+        ${abas('criar')}<form id="f" novalidate style="display:contents">
+        ${campo('nome', 'Nome completo', 'text', 'Seu nome', 'name')}${campo('email', 'E-mail', 'email', 'voce@email.com', 'email')}${campo('senha', 'Senha', 'password', '••••••••', 'new-password')}
+        <div class="row-between"><label class="check"><input type="checkbox" checked> Lembrar de mim</label><a href="info.html#termos" class="link-gold" style="font-size:13px">Termos de uso</a></div>
+        <button class="btn btn-dark btn-block">Criar conta</button></form>${google}`,
+      esqueci: () => `<button type="button" class="link-gold" data-modo="entrar" style="align-self:flex-start;font-size:13px">← Voltar para o login</button>
+        <h2>Esqueceu a senha?</h2><p>Digite o e-mail da sua conta. Vamos enviar um link para você criar uma senha nova.</p>
+        <div class="alert hidden" id="erro" role="alert">Digite um e-mail válido.</div>
+        <form id="f" novalidate style="display:contents">${campo('email', 'E-mail', 'email', 'voce@email.com', 'email')}
+        <button class="btn btn-dark btn-block">Enviar link de recuperação</button></form>
+        <button type="button" class="btn btn-outline btn-block" data-modo="entrar" style="font-size:15px">Lembrei a senha</button>`,
+      enviado: email => `<button type="button" class="link-gold" data-modo="entrar" style="align-self:flex-start;font-size:13px">← Voltar para o login</button>
+        <h2>Verifique seu e-mail</h2><p>Enviamos um link para ${esc(email)}. Ele vale por 30 minutos. Não achou? Olhe também a caixa de spam.</p>
+        <button type="button" class="btn btn-dark btn-block" data-modo="entrar">Voltar para o login</button>
+        <button type="button" class="btn btn-outline btn-block" data-reenviar="${esc(email)}" style="font-size:15px">Reenviar e-mail</button>`,
+    };
+    let modo = params.get('modo') in telas ? params.get('modo') : 'entrar';
+    function show(m, arg) { modo = m; $('#card').innerHTML = telas[m](arg); document.title = `${{ entrar: 'Entrar', criar: 'Criar conta', esqueci: 'Recuperar senha', enviado: 'Verifique seu e-mail' }[m]} — Seshat`; }
+    const emailOk = s => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s);
+    const entrar = (nome, email) => { store.set('user', { nome, email }); location.href = params.get('volta') || 'conta.html'; };
+
+    $('#card').addEventListener('click', e => {
+      const b = e.target.closest('[data-modo]'); if (b) show(b.dataset.modo);
+      if (e.target.closest('[data-google]')) entrar('Ana Souza', 'ana.souza@email.com');
+      if (e.target.closest('[data-reenviar]')) toast('Enviamos o link de novo');
+    });
+    $('#card').addEventListener('submit', e => {
+      e.preventDefault();
+      const v = id => $('#' + id)?.value.trim() || '';
+      const ok = { entrar: emailOk(v('email')) && v('senha').length >= 6, criar: v('nome').length > 1 && emailOk(v('email')) && v('senha').length >= 6, esqueci: emailOk(v('email')) }[modo];
+      $$('#card .input').forEach(i => i.classList.toggle('erro', !ok));
+      $('#erro').classList.toggle('hidden', ok);
+      if (!ok) return;
+      if (modo === 'esqueci') return show('enviado', v('email'));
+      entrar(v('nome') || v('email').split('@')[0], v('email'));
+    });
+    show(modo);
+  </script>
+</body>
+</html>

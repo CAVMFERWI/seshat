@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finalizar compra — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <header class="checkout-head"><div class="wrap" id="topo">
+    <a href="carrinho.html" class="link-gold back">← Voltar ao carrinho</a>
+    <span class="safe">🔒 Compra segura</span>
+  </div></header>
+  <main id="conteudo">
+    <form class="wrap checkout" id="form" novalidate>
+      <div class="checkout-form">
+        <div class="alert hidden" id="recusado" role="alert">Pagamento recusado. Verifique os dados do cartão ou escolha outra forma de pagamento.</div>
+        <section class="box">
+          <h2>Dados de contato</h2>
+          <div class="fields">
+            <div class="field"><label for="nome">Nome completo</label><input class="input" id="nome" autocomplete="name" placeholder="Seu nome completo" required><span class="msg"></span></div>
+            <div class="field"><label for="email">E-mail</label><input class="input" id="email" type="email" autocomplete="email" placeholder="voce@email.com" required><span class="msg"></span></div>
+            <div class="field"><label for="cpf">CPF</label><input class="input" id="cpf" inputmode="numeric" placeholder="000.000.000-00" data-mask="cpf" required><span class="msg"></span></div>
+            <div class="field"><label for="cel">Celular</label><input class="input" id="cel" type="tel" autocomplete="tel" placeholder="(51) 90000-0000" data-mask="cel" required><span class="msg"></span></div>
+          </div>
+        </section>
+        <section class="box">
+          <h2>Endereço de entrega</h2>
+          <div class="fields">
+            <div class="field"><label for="cep">CEP</label><input class="input" id="cep" inputmode="numeric" autocomplete="postal-code" placeholder="00000-000" data-mask="cep" required><span class="msg"></span></div>
+            <div class="field"><label for="cidade">Cidade</label><input class="input" id="cidade" autocomplete="address-level2" placeholder="Porto Alegre" required><span class="msg"></span></div>
+            <div class="field"><label for="rua">Rua</label><input class="input" id="rua" autocomplete="address-line1" placeholder="Rua das Flores" required><span class="msg"></span></div>
+            <div class="field"><label for="numero">Número</label><input class="input" id="numero" inputmode="numeric" placeholder="Ex.: 123" required><span class="msg"></span></div>
+            <div class="field field-full"><label for="comp">Complemento (opcional)</label><input class="input" id="comp" placeholder="Apto, bloco, casa…"></div>
+          </div>
+        </section>
+        <section class="box">
+          <h2>Forma de pagamento</h2>
+          <label class="pay-opt"><input type="radio" name="pag" value="pix" checked><div><b>Pix</b><span class="green">10% OFF · aprovação imediata</span></div></label>
+          <label class="pay-opt"><input type="radio" name="pag" value="cartao"><div><b>Cartão de crédito</b><span>Até 6x sem juros</span></div><span id="bandeiras-opt"></span></label>
+          <label class="pay-opt"><input type="radio" name="pag" value="debito"><div><b>Cartão de débito</b><span>À vista · débito na hora</span></div><span id="bandeiras-deb"></span></label>
+          <label class="pay-opt"><input type="radio" name="pag" value="boleto"><div><b>Boleto bancário</b><span>Vence em 3 dias úteis</span></div></label>
+
+          <div class="pix" data-pag="pix">
+            <svg class="qr" viewBox="0 0 29 29" aria-label="QR Code do Pix" role="img" id="qr"></svg>
+            <div class="pix-text">
+              <h3>Pague com Pix</h3>
+              <p>Abra o app do seu banco, escolha pagar com Pix e escaneie o QR Code ou copie o código abaixo. Depois de pagar, clique em "Já fiz o Pix".</p>
+              <span class="valor">Valor a pagar:<b data-total-pix></b></span>
+              <code class="pix-code" id="pix-code">00020126580014br.gov.bcb.pix0136seshat-exemplo-1234</code>
+              <button type="button" class="btn btn-dark btn-sm" id="copiar">Copiar código Pix</button>
+              <span class="ok">Aprovação imediata · O código expira em 30 minutos.</span>
+            </div>
+          </div>
+
+          <div class="hidden" data-pag="cartao debito" style="display:flex;flex-direction:column;gap:16px">
+            <h3 style="font-size:17px;font-weight:600">Dados do cartão</h3>
+            <div id="bandeiras"></div>
+            <div class="fields">
+              <div class="field field-full"><label for="cc-num">Número do cartão</label><input class="input" id="cc-num" inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000" data-mask="cartao"><span class="msg" id="cc-brand" style="color:var(--muted)"></span></div>
+              <div class="field field-full"><label for="cc-nome">Nome impresso no cartão</label><input class="input" id="cc-nome" autocomplete="cc-name" placeholder="NOME COMO NO CARTÃO" style="text-transform:uppercase"><span class="msg"></span></div>
+              <div class="field"><label for="cc-val">Validade</label><input class="input" id="cc-val" inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA" data-mask="validade"><span class="msg"></span></div>
+              <div class="field"><label for="cc-cvv">CVV</label><input class="input" id="cc-cvv" inputmode="numeric" autocomplete="cc-csc" placeholder="123" maxlength="4"><span class="msg"></span></div>
+              <div class="field field-full" id="campo-parc"><label for="cc-parc">Parcelas</label><select class="select input" id="cc-parc"></select></div>
+            </div>
+          </div>
+
+          <div class="hidden pix-text" data-pag="boleto">
+            <h3>Boleto bancário</h3>
+            <p>O boleto é gerado quando você finalizar o pedido e vence em 3 dias úteis. A compensação leva até 2 dias úteis depois do pagamento.</p>
+            <span class="valor">Valor do boleto:<b data-total-cartao></b></span>
+          </div>
+        </section>
+      </div>
+
+      <aside class="summary">
+        <h2>Seu pedido</h2>
+        <div class="mini-items" id="itens"></div>
+        <div class="hr"></div>
+        <div id="resumo" style="display:flex;flex-direction:column;gap:16px"></div>
+        <button class="btn btn-dark btn-block" id="pagar">Já fiz o Pix</button>
+        <span class="secure">🔒 Seus dados estão protegidos</span>
+      </aside>
+    </form>
+  </main>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    if (!cart.items().length) location.replace('carrinho.html');
+    $('#topo').insertAdjacentHTML('afterbegin', logo());
+    $('#bandeiras').innerHTML = flags(CARTOES);
+    $('#bandeiras-opt').innerHTML = flags(CARTOES.slice(0, 3));
+    $('#bandeiras-deb').innerHTML = flags(['Visa', 'Mastercard', 'Elo']);
+
+    // QR Code ilustrativo (padrão aleatório fixo com os três quadrados de canto)
+    (() => {
+      let seed = 7, r = () => (seed = (seed * 9301 + 49297) % 233280) / 233280, cells = '';
+      const finder = (x, y) => `<rect x="${x}" y="${y}" width="7" height="7"/><rect x="${x + 1}" y="${y + 1}" width="5" height="5" fill="#fff"/><rect x="${x + 2}" y="${y + 2}" width="3" height="3"/>`;
+      for (let y = 0; y < 29; y++) for (let x = 0; x < 29; x++) {
+        const corner = (x < 8 && y < 8) || (x > 20 && y < 8) || (x < 8 && y > 20);
+        if (!corner && r() > .5) cells += `<rect x="${x}" y="${y}" width="1" height="1"/>`;
+      }
+      $('#qr').innerHTML = `<g fill="#14122B">${cells}${finder(0, 0)}${finder(22, 0)}${finder(0, 22)}</g>`;
+    })();
+
+    const pag = () => $('input[name="pag"]:checked').value;
+    function draw() {
+      const t = totals(), m = pag();
+      $('#itens').innerHTML = cart.items().map(i => { const p = produto(i.id); return `<div class="mini-item"><img src="${capa(p)}" alt=""><div><b>${esc(p.titulo)}</b><span>Qtd: ${i.q}</span></div><b>${brl(cents(p.preco * i.q))}</b></div>`; }).join('');
+      $('#resumo').innerHTML = `
+        <div class="sum-row">Subtotal <b>${brl(t.sub)}</b></div>
+        ${t.cupom ? `<div class="sum-row">Cupom ${t.codigo} <b class="green">– ${brl(t.cupom)}</b></div>` : ''}
+        ${m === 'pix' ? `<div class="sum-row">Desconto Pix <b class="green">– ${brl(t.pix)}</b></div>` : ''}
+        <div class="sum-row">Frete <b class="${t.frete ? '' : 'green'}">${t.frete ? brl(t.frete) : 'Grátis'}</b></div>
+        <div class="hr"></div>
+        <div class="sum-total"><span>Total</span><b>${brl(m === 'pix' ? t.totalPix : t.totalCartao)}</b></div>`;
+      $$('[data-total-pix]').forEach(e => e.textContent = brl(t.totalPix));
+      $$('[data-total-cartao]').forEach(e => e.textContent = brl(t.totalCartao));
+      $('#cc-parc').innerHTML = [1, 2, 3, 4, 5, 6].map(n => `<option value="${n}">${n}x de ${brl(cents(t.totalCartao / n))} sem juros</option>`).join('');
+      $$('[data-pag]').forEach(el => el.classList.toggle('hidden', !el.dataset.pag.split(' ').includes(m)));
+      $('#campo-parc').classList.toggle('hidden', m !== 'cartao'); // débito é sempre à vista
+      $('#pagar').textContent = { pix: 'Já fiz o Pix', cartao: 'Pagar com crédito', debito: 'Pagar com débito', boleto: 'Gerar boleto' }[m];
+      $('#recusado').classList.add('hidden');
+    }
+    $$('input[name="pag"]').forEach(r => r.onchange = draw);
+    draw();
+
+    $('#copiar').onclick = () => { navigator.clipboard?.writeText($('#pix-code').textContent).catch(() => {}); toast('Código Pix copiado'); };
+
+    // Máscaras
+    const masks = {
+      cpf: v => v.slice(0, 11).replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d)/, '$1.$2').replace(/(\d{3})(\d{1,2})$/, '$1-$2'),
+      cel: v => v.slice(0, 11).replace(/^(\d{2})(\d)/, '($1) $2').replace(/(\d{5})(\d{1,4})$/, '$1-$2'),
+      cep: v => v.slice(0, 8).replace(/(\d{5})(\d)/, '$1-$2'),
+      cartao: v => v.slice(0, 16).replace(/(\d{4})(?=\d)/g, '$1 '),
+      validade: v => v.slice(0, 4).replace(/(\d{2})(\d)/, '$1/$2'),
+    };
+    $$('[data-mask]').forEach(i => i.addEventListener('input', () => { i.value = masks[i.dataset.mask](i.value.replace(/\D/g, '')); }));
+    $('#cc-cvv').addEventListener('input', e => e.target.value = e.target.value.replace(/\D/g, ''));
+
+    const brand = n => /^4/.test(n) ? 'Visa' : /^(5[1-5]|2[2-7])/.test(n) ? 'Mastercard' : /^3[47]/.test(n) ? 'American Express' : /^(606282|3841)/.test(n) ? 'Hipercard' : /^(4011|4312|4389|4514|4576|5041|5066|5067|509|6277|6362|6363|650|6516|6550)/.test(n) ? 'Elo' : '';
+    $('#cc-num').addEventListener('input', e => {
+      const b = brand(e.target.value.replace(/\D/g, ''));
+      $('#cc-brand').textContent = b ? `Bandeira: ${b}` : '';
+      $$('#bandeiras .flag').forEach(f => f.style.opacity = !b || f.title === b ? 1 : .3);
+    });
+
+    // CEP: busca o endereço no ViaCEP quando há internet; se falhar, a pessoa preenche à mão
+    $('#cep').addEventListener('input', async e => {
+      const cep = e.target.value.replace(/\D/g, '');
+      if (cep.length !== 8) return;
+      try {
+        const r = await (await fetch(`https://viacep.com.br/ws/${cep}/json/`)).json();
+        if (r.erro) return;
+        $('#rua').value = [r.logradouro, r.bairro].filter(Boolean).join(', ');
+        $('#cidade').value = `${r.localidade}/${r.uf}`;
+        $('#rua').classList.add('found'); $('#cidade').classList.add('found');
+        $('#numero').focus();
+      } catch {}
+    });
+
+    // Validações
+    const cpfOk = c => {
+      c = c.replace(/\D/g, '');
+      if (c.length !== 11 || /^(\d)\1+$/.test(c)) return false;
+      const dv = n => { let s = 0; for (let i = 0; i < n; i++) s += +c[i] * (n + 1 - i); return (s * 10) % 11 % 10; };
+      return dv(9) === +c[9] && dv(10) === +c[10];
+    };
+    const luhn = n => { let s = 0; [...n].reverse().forEach((d, i) => { d = +d; if (i % 2) { d *= 2; if (d > 9) d -= 9; } s += d; }); return n.length >= 13 && s % 10 === 0; };
+    const validadeOk = v => { const [m, a] = v.split('/').map(Number); if (!m || m > 12 || a === undefined) return false; const fim = new Date(2000 + a, m); return fim > new Date(); };
+    function check(id, ok, msg) {
+      const i = $('#' + id), s = i.parentElement.querySelector('.msg');
+      i.classList.toggle('erro', !ok);
+      i.setAttribute('aria-invalid', !ok);
+      if (s && id !== 'cc-num') s.textContent = ok ? '' : msg;
+      return ok;
+    }
+
+    $('#form').onsubmit = e => {
+      e.preventDefault();
+      const v = id => $('#' + id).value.trim();
+      const ok = [
+        check('nome', v('nome').split(/\s+/).length >= 2, 'Digite nome e sobrenome'),
+        check('email', /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v('email')), 'E-mail inválido'),
+        check('cpf', cpfOk(v('cpf')), 'CPF inválido'),
+        check('cel', v('cel').replace(/\D/g, '').length >= 10, 'Celular com DDD'),
+        check('cep', v('cep').replace(/\D/g, '').length === 8, 'CEP com 8 números'),
+        check('cidade', v('cidade').length > 1, 'Informe a cidade'),
+        check('rua', v('rua').length > 2, 'Informe a rua'),
+        check('numero', v('numero').length > 0, 'Informe o número'),
+      ].every(Boolean);
+      let cartaoOk = true;
+      if (pag() === 'cartao' || pag() === 'debito') {
+        cartaoOk = [
+          check('cc-nome', v('cc-nome').length > 3, 'Nome como está no cartão'),
+          check('cc-val', validadeOk(v('cc-val')), 'Validade inválida'),
+          check('cc-cvv', /^\d{3,4}$/.test(v('cc-cvv')), 'CVV com 3 ou 4 números'),
+        ].every(Boolean);
+        // Número que não passa no Luhn simula o "Pagamento recusado" do protótipo
+        if (ok && cartaoOk && !luhn(v('cc-num').replace(/\D/g, ''))) {
+          check('cc-num', false);
+          $('#recusado').classList.remove('hidden');
+          scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
+      if (!ok || !cartaoOk) { $('.input.erro')?.focus(); toast('Confira os campos destacados'); return; }
+      const t = totals();
+      const num = 'SE-' + String(Date.now()).slice(-5);
+      store.set('ultimo-pedido', { num, email: v('email'), total: pag() === 'pix' ? t.totalPix : t.totalCartao, pag: pag(), parcelas: pag() === 'cartao' ? +$('#cc-parc').value : 1 });
+      store.set('cupom', null);
+      cart.clear();
+      location.href = 'confirmado.html';
+    };
+  </script>
+</body>
+</html>

@@ -144,7 +144,12 @@ function renderCards(el, ids) {
   el.innerHTML = ids.map(produto).filter(Boolean).map(card).join('');
 }
 
-function updateCartCount() { $$('[data-cart-count]').forEach(e => e.textContent = cart.count()); }
+function updateCartCount() {
+  $$('[data-cart-count]').forEach(e => {
+    if (e.textContent && e.textContent != cart.count()) { const b = e.closest('a, button') || e; b.classList.remove('bump'); b.offsetWidth; b.classList.add('bump'); }
+    e.textContent = cart.count();
+  });
+}
 
 // Overlays
 function overlay(id, html) {
@@ -202,7 +207,7 @@ document.addEventListener('click', e => {
   if (fav) {
     e.preventDefault();
     const on = favs.toggle(fav.dataset.fav);
-    $$(`[data-fav="${fav.dataset.fav}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); });
+    $$(`[data-fav="${fav.dataset.fav}"]`).forEach(b => { b.classList.toggle('on', on); b.setAttribute('aria-pressed', on); b.classList.remove('pop'); b.offsetWidth; b.classList.add('pop'); });
     toast(on ? 'Adicionado aos favoritos' : 'Removido dos favoritos');
     document.dispatchEvent(new Event('favs'));
     return;
@@ -218,6 +223,19 @@ function mountLayout(ativo) {
   $('#header')?.insertAdjacentHTML('afterbegin', header(ativo));
   $('#footer')?.insertAdjacentHTML('afterbegin', footer());
   updateCartCount();
+  requestAnimationFrame(revelar); // espera os cards da página serem desenhados
+}
+
+// Seções e cards aparecem suavemente quando entram na tela
+function revelar() {
+  if (!('IntersectionObserver' in window)) return;
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('visivel'); io.unobserve(e.target); } }), { threshold: .12 });
+  $$('main section, main .grid > *').forEach((el, i) => {
+    if (el.getBoundingClientRect().top < innerHeight) return; // o que já está visível não pisca
+    el.classList.add('reveal');
+    if (el.parentElement.classList.contains('grid')) el.style.transitionDelay = (i % 5) * 60 + 'ms';
+    io.observe(el);
+  });
 }
 
 // Lista com filtros e ordenação (categoria, busca, favoritos)

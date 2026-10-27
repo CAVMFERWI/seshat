@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Produto — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <nav class="wrap crumbs" aria-label="Você está em" id="crumbs"></nav>
+    <section class="wrap product">
+      <div class="gallery">
+        <div class="gallery-main"><img id="foto" alt=""></div>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="info">
+        <span class="kicker" data-p="selo"></span>
+        <h1 data-p="titulo"></h1>
+        <span class="by" data-p="autor"></span>
+        <div class="rating"><span class="stars" aria-hidden="true">★★★★★</span><b>4,9</b><span>(128 avaliações)</span></div>
+        <div class="hr"></div>
+        <div class="prices" id="precos"></div>
+        <div class="stock" data-p="estoque"></div>
+        <div class="seller"><b data-p="vendedor"></b><span data-p="vendedor-info"></span></div>
+        <div class="buy-row">
+          <div class="qty qty-lg" aria-label="Quantidade"><button type="button" data-q="-1" aria-label="Diminuir">–</button><span id="qtd">1</span><button type="button" data-q="1" aria-label="Aumentar">+</button></div>
+          <button class="btn btn-dark" id="comprar">Comprar agora</button>
+        </div>
+        <button class="btn btn-outline btn-block" id="add" style="border-color:var(--ink)">Adicionar ao carrinho</button>
+        <button class="fav-link" id="fav">♡  Adicionar aos favoritos</button>
+        <div class="ship">
+          <b>Calcule o frete e o prazo</b>
+          <form id="frete"><input class="input" id="cep" inputmode="numeric" placeholder="Digite seu CEP" aria-label="CEP" maxlength="9"><button class="btn btn-gold btn-sm" style="padding:11px 22px">Calcular</button></form>
+          <span class="ok" id="frete-msg">Frete grátis para compras acima de R$ 199,00</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="details"><div class="wrap">
+      <div class="tabs-line" role="tablist">
+        <button class="ativo" role="tab" data-tab="desc">Descrição</button>
+        <button role="tab" data-tab="ficha">Ficha técnica</button>
+        <button role="tab" data-tab="aval">Avaliações (128)</button>
+      </div>
+      <div class="details-cols">
+        <p data-p="descricao" data-pane="desc"></p>
+        <div class="reviews hidden" data-pane="aval">
+          <div class="review"><span class="stars">★★★★★</span><b>Mariana R.</b>Chegou muito bem embalado, sem nenhuma dobra. Edição linda!</div>
+          <div class="review"><span class="stars">★★★★★</span><b>Pedro H.</b>Preço justo e entrega antes do prazo. Já é a minha terceira compra.</div>
+          <div class="review"><span class="stars">★★★★☆</span><b>Camila N.</b>Ótima qualidade de impressão. Só queria que viesse com marcador.</div>
+        </div>
+        <dl class="spec" id="ficha" data-pane="desc ficha"></dl>
+      </div>
+    </div></section>
+
+    <section class="wrap section">
+      <div class="section-head"><div><h2>Você também pode gostar</h2><p data-p="rel"></p></div></div>
+      <div class="grid" id="relacionados"></div>
+    </section>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    const p = produto(params.get('id')) || produto('uzumaki-luxo');
+    const gen = Object.entries(CATEGORIAS).find(([, c]) => c.itens.includes(p.id));
+    mountLayout(p.rara ? 'raridades' : gen?.[0]);
+    document.title = `${p.titulo} — Seshat`;
+    const crumb = p.rara ? ['raridades', 'Raridades'] : gen ? [gen[0], gen[1].nome] : ['lancamentos', 'Lançamentos'];
+    $('#crumbs').innerHTML = `<a href="index.html">Início</a><span class="sep">/</span><a href="categoria.html?g=${crumb[0]}">${crumb[1]}</a><span class="sep">/</span><span>${esc(p.titulo)}</span>`;
+
+    const set = (k, v) => $$(`[data-p="${k}"]`).forEach(e => e.textContent = v);
+    set('selo', p.selo || `${p.editora.toUpperCase()} · ${p.rara ? 'EDIÇÃO DE COLECIONADOR' : 'BROCHURA'} · ${gen ? gen[1].nome.toUpperCase() : 'MANGÁ'}`);
+    set('titulo', p.titulo);
+    set('autor', `por ${p.autor}`);
+    set('estoque', p.estoque || (p.rara ? 'Restam poucas unidades — exemplar de coleção' : 'Em estoque — enviamos em até 24h'));
+    if (!p.rara && !p.estoque) Object.assign($('[data-p="estoque"]').style, { background: 'var(--green-soft)', color: 'var(--green)' });
+    set('vendedor', p.rara ? 'Vendido por Sebo Espiral · vendedor parceiro verificado' : 'Vendido e entregue pela Seshat');
+    set('vendedor-info', p.rara ? '★ 4,9 como vendedor · 1.240 vendas · entrega e garantia pela Seshat' : 'Produto novo, lacrado e com nota fiscal');
+    set('descricao', p.descricao || `${p.titulo} chega à Seshat pela ${p.editora}. Obra de ${p.autor}, com impressão de qualidade, papel encorpado e acabamento pensado para durar na sua estante. Um volume indispensável para quem acompanha a série${gen ? ' ou ama ' + gen[1].nome.toLowerCase() : ''}.`);
+    set('rel', p.rara ? 'Outras raridades e clássicos do gênero' : `Mais títulos de ${gen ? gen[1].nome : 'mangá'} que os leitores adoram`);
+
+    const d = desconto(p);
+    $('#precos').innerHTML = `${p.antigo ? `<div class="row"><span class="old">${brl(p.antigo)}</span><span class="seal">-${d}%</span></div>` : ''}
+      <span class="now">${brl(p.preco)}</span>
+      <span class="pix">ou ${brl(cents(p.preco * .9))} no Pix (10% OFF)</span>
+      <span class="parc">ou 6x de ${brl(cents(p.preco / 6))} sem juros no cartão</span>`;
+
+    const ficha = p.ficha || [['Editora', p.editora], ['Autor', p.autor], ['Idioma', 'Português (Brasil)'], ['Formato', p.rara ? 'Capa dura · 17 × 25 cm' : 'Brochura · 13,7 × 20 cm'], ['Páginas', p.rara ? '640' : '192'], ['Edição', p.rara ? 'Luxo · 1ª tiragem' : 'Regular']];
+    $('#ficha').innerHTML = ficha.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
+
+    // Galeria: a mesma capa com recortes diferentes, como no protótipo
+    const pos = ['center', 'top', 'center 70%', 'bottom'];
+    $('#foto').src = capa(p); $('#foto').alt = `Capa de ${p.titulo}`;
+    $('#thumbs').innerHTML = pos.map((o, i) => `<button class="${i ? '' : 'ativo'}" data-pos="${o}" aria-label="Foto ${i + 1}"><img src="${capa(p)}" alt="" style="object-position:${o};${i ? 'transform:scale(1.6)' : ''}"></button>`).join('');
+    $('#thumbs').onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      $$('#thumbs button').forEach(x => x.classList.toggle('ativo', x === b));
+      $('#foto').style.objectPosition = b.dataset.pos;
+      $('#foto').style.transform = b === $('#thumbs button') ? '' : 'scale(1.35)';
+    };
+
+    let q = 1;
+    $$('[data-q]').forEach(b => b.onclick = () => { q = Math.max(1, Math.min(10, q + +b.dataset.q)); $('#qtd').textContent = q; });
+    $('#add').onclick = () => { cart.add(p.id, q); openMiniCart(); };
+    $('#comprar').onclick = () => { cart.add(p.id, q); location.href = 'checkout.html'; };
+    const favTxt = () => $('#fav').textContent = favs.has(p.id) ? '♥  Nos seus favoritos' : '♡  Adicionar aos favoritos';
+    $('#fav').onclick = () => { toast(favs.toggle(p.id) ? 'Adicionado aos favoritos' : 'Removido dos favoritos'); favTxt(); };
+    favTxt();
+
+    $('#cep').oninput = e => { const v = e.target.value.replace(/\D/g, '').slice(0, 8); e.target.value = v.length > 5 ? v.slice(0, 5) + '-' + v.slice(5) : v; };
+    $('#frete').onsubmit = e => {
+      e.preventDefault();
+      const ok = $('#cep').value.replace(/\D/g, '').length === 8;
+      $('#cep').classList.toggle('erro', !ok);
+      $('#frete-msg').style.color = ok ? '' : 'var(--red)';
+      $('#frete-msg').textContent = !ok ? 'Digite um CEP com 8 números.' : p.preco >= 199 ? 'Frete grátis · chega em 3 a 5 dias úteis' : 'PAC: R$ 19,90 (5 a 8 dias úteis) · grátis acima de R$ 199';
+    };
+
+    $$('[data-tab]').forEach(b => b.onclick = () => {
+      $$('[data-tab]').forEach(x => x.classList.toggle('ativo', x === b));
+      $$('[data-pane]').forEach(el => el.classList.toggle('hidden', !el.dataset.pane.split(' ').includes(b.dataset.tab)));
+    });
+
+    const rel = (p.rara ? LISTAS.raridades.itens : gen ? gen[1].itens : HOME.lancamentos).filter(id => id !== p.id).slice(0, 5);
+    renderCards($('#relacionados'), rel);
+  </script>
+</body>
+</html>

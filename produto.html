@@ -18,7 +18,6 @@
     <section class="wrap product">
       <div class="gallery">
         <div class="gallery-main"><img id="foto" alt=""></div>
-        <div class="thumbs" id="thumbs"></div>
       </div>
       <div class="info">
         <span class="kicker" data-p="selo"></span>
@@ -96,16 +95,7 @@
     const ficha = p.ficha || [['Editora', p.editora], ['Autor', p.autor], ['Idioma', 'Português (Brasil)'], ['Formato', p.rara ? 'Capa dura · 17 × 25 cm' : 'Brochura · 13,7 × 20 cm'], ['Páginas', p.rara ? '640' : '192'], ['Edição', p.rara ? 'Luxo · 1ª tiragem' : 'Regular']];
     $('#ficha').innerHTML = ficha.map(([k, v]) => `<div><dt>${k}</dt><dd>${esc(v)}</dd></div>`).join('');
 
-    // Galeria: a mesma capa com recortes diferentes, como no protótipo
-    const pos = ['center', 'top', 'center 70%', 'bottom'];
     $('#foto').src = capa(p); $('#foto').alt = `Capa de ${p.titulo}`;
-    $('#thumbs').innerHTML = pos.map((o, i) => `<button class="${i ? '' : 'ativo'}" data-pos="${o}" aria-label="Foto ${i + 1}"><img src="${capa(p)}" alt="" style="object-position:${o};${i ? 'transform:scale(1.6)' : ''}"></button>`).join('');
-    $('#thumbs').onclick = e => {
-      const b = e.target.closest('button'); if (!b) return;
-      $$('#thumbs button').forEach(x => x.classList.toggle('ativo', x === b));
-      $('#foto').style.objectPosition = b.dataset.pos;
-      $('#foto').style.transform = b === $('#thumbs button') ? '' : 'scale(1.35)';
-    };
 
     let q = 1;
     $$('[data-q]').forEach(b => b.onclick = () => { q = Math.max(1, Math.min(10, q + +b.dataset.q)); $('#qtd').textContent = q; });

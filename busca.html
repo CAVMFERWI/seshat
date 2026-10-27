@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Busca — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <nav class="wrap crumbs" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Busca</span></nav>
+    <section class="page-head"><div class="wrap">
+      <div><h1 data-titulo></h1><p data-desc></p></div>
+      <div class="count"><strong data-total></strong><span>resultados</span></div>
+    </div></section>
+    <div class="wrap list-body" id="lista"></div>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    mountLayout();
+    const q = (params.get('q') || '').trim();
+    // Busca sem acento e sem maiúsculas em título, autor e editora
+    const norm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase();
+    const ids = PRODUTOS.filter(p => !q || norm(`${p.titulo} ${p.autor} ${p.editora}`).includes(norm(q))).map(p => p.id);
+    $('[data-titulo]').textContent = q ? `Resultados para “${q}”` : 'Todos os mangás';
+    $('[data-desc]').textContent = `${ids.length} ${ids.length === 1 ? 'título encontrado' : 'títulos encontrados'} em todos os gêneros, ordenados por relevância.`;
+    $('[data-total]').textContent = ids.length;
+    $('#lista').innerHTML = filtersHTML(ids.length ? ids : ['one-piece-26']) + `<div class="list-content"><div class="sortbar"><span data-info></span>${sortHTML}</div><div class="grid grid-4"></div></div>`;
+    mountList($('#lista'), ids, { label: n => `${n} ${n === 1 ? 'resultado' : 'resultados'}`, vazio: `Nada encontrado para “${esc(q)}”` });
+  </script>
+</body>
+</html>

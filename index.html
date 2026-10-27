@@ -74,7 +74,8 @@
           </div>
           <div class="rare-covers">
             <button class="arrow prev" aria-label="Raridade anterior">‹</button>
-            <div style="display:flex;gap:20px;align-items:flex-start" data-r="capas"></div>
+            <div class="rare-track" data-r="capas"></div>
+            <div class="rare-dots" data-r="dots"></div>
             <button class="arrow next" aria-label="Próxima raridade">›</button>
           </div>
         </div>
@@ -108,27 +109,61 @@
     renderCards($('#lancamentos'), HOME.lancamentos);
     renderCards($('#mais-vendidos'), HOME.maisVendidos);
 
-    // Carrossel de raridades: a capa do meio é a raridade em destaque
-    let atual = 0;
-    const rar = HOME.raridades.map(produto);
-    function showRare() {
-      const p = rar[atual];
-      $('[data-r="titulo"]').textContent = p.titulo;
-      $('[data-r="descricao"]').textContent = p.descricao || `Exemplar de coleção de ${p.autor}, conferido um a um pela equipe da Seshat.`;
-      $('[data-r="preco"]').textContent = brl(p.preco);
-      $('[data-r="add"]').dataset.add = p.id;
-      const ordem = [rar[(atual + rar.length - 1) % rar.length], p, rar[(atual + 1) % rar.length]];
-      $('[data-r="capas"]').innerHTML = ordem.map((x, i) => `<img src="${capa(x)}" alt="Capa de ${esc(x.titulo)}" class="${i === 1 ? 'ativo' : ''}" data-go="${i - 1}">`).join('');
+    // Carrossel de raridades: as capas são criadas uma vez e só trocam de posição (data-pos), o CSS anima o movimento
+    let atual = 0, timer;
+    const rar = HOME.raridades.map(produto), n = rar.length;
+    const track = $('[data-r="capas"]'), dots = $('[data-r="dots"]'), texto = $('.rare-text');
+    track.innerHTML = rar.map((x, i) => `<img src="${capa(x)}" alt="Capa de ${esc(x.titulo)}" data-i="${i}">`).join('');
+    dots.innerHTML = rar.map((x, i) => `<button aria-label="Ver ${esc(x.titulo)}" data-i="${i}"></button>`).join('');
+    // dir: 1 = avançou, -1 = voltou. As capas escondidas saem e entram pelo lado certo
+    function posicao(i, dir) {
+      const d = (i - atual + n) % n; // distância circular até a capa em destaque
+      return d === 0 ? '0' : d === 1 ? '1' : d === n - 1 ? '-1' : dir < 0 ? 'hide-r' : 'hide-l';
     }
-    $('.arrow.prev').onclick = () => { atual = (atual + rar.length - 1) % rar.length; showRare(); };
-    $('.arrow.next').onclick = () => { atual = (atual + 1) % rar.length; showRare(); };
-    $('[data-r="capas"]').onclick = e => {
+    function showRare(dir = 0) {
+      const p = rar[atual], imgs = $$('img', track);
+      imgs.forEach((img, i) => {
+        const pos = posicao(i, dir);
+        if (img.dataset.pos?.startsWith('hide') && !pos.startsWith('hide')) {
+          // coloca a capa escondida no lado de onde ela vai entrar, sem animar
+          img.style.transition = 'none';
+          img.dataset.pos = dir < 0 ? 'hide-l' : 'hide-r';
+          img.offsetWidth;
+          img.style.transition = '';
+        }
+      });
+      imgs.forEach((img, i) => img.dataset.pos = posicao(i, dir));
+      $$('button', dots).forEach((b, i) => b.classList.toggle('ativo', i === atual));
+      const trocar = () => {
+        $('[data-r="titulo"]').textContent = p.titulo;
+        $('[data-r="descricao"]').textContent = p.descricao || `Exemplar de coleção de ${p.autor}, conferido um a um pela equipe da Seshat.`;
+        $('[data-r="preco"]').textContent = brl(p.preco);
+        $('[data-r="add"]').dataset.add = p.id;
+        texto.classList.remove('trocando');
+      };
+      if (!dir) return trocar();
+      texto.classList.add('trocando');
+      setTimeout(trocar, 300);
+    }
+    const ir = i => { if ((i + n) % n === atual) return; const dir = i > atual ? 1 : -1; atual = (i + n) % n; showRare(dir); reiniciar(); };
+    // Troca sozinha a cada 5 s e pausa quando o mouse está em cima
+    const reiniciar = () => { clearInterval(timer); timer = setInterval(() => { atual = (atual + 1) % n; showRare(1); }, 5000); };
+    $('#raridades').onmouseenter = () => clearInterval(timer);
+    $('#raridades').onmouseleave = reiniciar;
+    $('.arrow.prev').onclick = () => ir(atual - 1);
+    $('.arrow.next').onclick = () => ir(atual + 1);
+    dots.onclick = e => { const b = e.target.closest('button'); if (b) ir(+b.dataset.i); };
+    track.onclick = e => {
       const img = e.target.closest('img'); if (!img) return;
-      const go = +img.dataset.go;
-      if (go === 0) location.href = `produto.html?id=${rar[atual].id}`;
-      else { atual = (atual + go + rar.length) % rar.length; showRare(); }
+      if (img.dataset.pos === '0') location.href = `produto.html?id=${rar[atual].id}`;
+      else ir(atual + +img.dataset.pos);
     };
+    // Arrastar com o dedo no celular
+    let x0 = null;
+    track.addEventListener('touchstart', e => x0 = e.touches[0].clientX, { passive: true });
+    track.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) ir(atual + (dx < 0 ? 1 : -1)); x0 = null; });
     showRare();
+    reiniciar();
   </script>
 </body>
 </html>

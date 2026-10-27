@@ -104,7 +104,7 @@ const LISTAS = {
 const HOME = {
   lancamentos: ['one-piece-26', 'dragon-ball-04', 'chainsaw-man-07', 'ashita-no-joe-08', 'kings-maker-02'],
   maisVendidos: ['to-your-eternity-15', 're-zero-30', 'tokyo-ghoul-re-01', 'ajin-03', 'mushoku-tensei-04'],
-  raridades: ['licoes-akira-toriyama', 'uzumaki-luxo', 'the-climber'],
+  raridades: ['licoes-akira-toriyama', 'uzumaki-luxo', 'the-climber', 'cavaleiros-g-20'],
 };
 
 const PEDIDOS = [

@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Carrinho — Seshat</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <nav class="wrap crumbs" aria-label="Você está em"><a href="index.html">Início</a><span class="sep">/</span><span>Carrinho</span></nav>
+    <div class="wrap cart" id="carrinho"></div>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    mountLayout();
+    function draw() {
+      const it = cart.items(), t = totals(), n = cart.count();
+      if (!it.length) {
+        $('#carrinho').innerHTML = `<div class="empty" style="flex:1"><strong>Seu carrinho está vazio</strong><span>Que tal começar pelos lançamentos da semana?</span><a href="categoria.html?g=lancamentos" class="btn btn-dark btn-sm">Ver lançamentos</a></div>`;
+        return;
+      }
+      $('#carrinho').innerHTML = `
+        <section class="cart-items">
+          <header><h1>Seu carrinho</h1><p>${n} ${n === 1 ? 'item' : 'itens'} · ${t.frete ? `faltam ${brl(cents(199 - t.sub))} para o frete grátis` : 'frete grátis já aplicado'}</p></header>
+          ${it.map(i => { const p = produto(i.id); return `<div class="cart-item">
+            <a href="produto.html?id=${p.id}"><img src="${capa(p)}" alt="Capa de ${esc(p.titulo)}"></a>
+            <div class="meta"><a href="produto.html?id=${p.id}">${esc(p.titulo)}</a><span>${p.editora}${i.q > 1 ? ` · ${i.q} × ${brl(p.preco)}` : ''}</span><span class="ok">Em estoque</span></div>
+            <div class="qty" aria-label="Quantidade de ${esc(p.titulo)}"><button data-set="${p.id}" data-v="${i.q - 1}" aria-label="Diminuir">–</button><span>${i.q}</span><button data-set="${p.id}" data-v="${i.q + 1}" aria-label="Aumentar">+</button></div>
+            <span class="total">${brl(cents(p.preco * i.q))}</span>
+            <button class="trash" data-set="${p.id}" data-v="0" aria-label="Remover ${esc(p.titulo)}">${LIXEIRA}</button>
+          </div>`; }).join('')}
+          <a href="index.html" class="link-gold" style="display:inline-block;margin-top:24px">+ Adicionar mais mangás</a>
+        </section>
+        <aside class="summary">
+          <h2>Resumo do pedido</h2>
+          <div class="sum-row">Subtotal (${n} ${n === 1 ? 'item' : 'itens'}) <b>${brl(t.sub)}</b></div>
+          ${t.cupom ? `<div class="sum-row">Cupom ${t.codigo} <b class="green">– ${brl(t.cupom)}</b></div>` : ''}
+          <div class="sum-row">Desconto Pix (10%) <b class="green">– ${brl(t.pix)}</b></div>
+          <div class="sum-row">Frete <b class="${t.frete ? '' : 'green'}">${t.frete ? brl(t.frete) : 'Grátis'}</b></div>
+          <div class="hr"></div>
+          <div class="sum-row">Total no Pix <b>${brl(t.totalPix)}</b></div>
+          <small>No cartão: ${brl(t.totalCartao)} em até 6x de ${brl(t.parcela)}</small>
+          <form class="coupon" id="cupom"><input class="input" placeholder="Cupom de desconto" aria-label="Cupom de desconto" value="${t.codigo || ''}"><button class="btn btn-gold">Aplicar</button></form>
+          <a href="checkout.html" class="btn btn-dark btn-block">Finalizar compra</a>
+          <span class="secure">🔒 Compra 100% segura</span>
+        </aside>`;
+    }
+    document.addEventListener('click', e => {
+      const b = e.target.closest('[data-set]');
+      if (b) { cart.setQ(b.dataset.set, Math.min(10, +b.dataset.v)); draw(); }
+    });
+    document.addEventListener('submit', e => {
+      if (e.target.id !== 'cupom') return;
+      e.preventDefault();
+      const code = $('input', e.target).value.trim().toUpperCase();
+      if (code === CUPOM) { store.set('cupom', code); toast('Cupom aplicado: 10% de desconto'); }
+      else { store.set('cupom', null); toast(code ? 'Cupom inválido. Experimente BEMVINDO10' : 'Cupom removido'); }
+      draw();
+    });
+    draw();
+  </script>
+</body>
+</html>

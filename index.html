@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Seshat — Mangás e Raridades</title>
+  <link rel="icon" href="img/simbolo.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script>try { document.documentElement.dataset.theme = JSON.parse(localStorage.getItem('seshat-theme')) || 'light'; } catch (e) {}</script>
+</head>
+<body>
+  <div id="header"></div>
+  <main id="conteudo">
+    <section class="hero">
+      <div class="wrap">
+        <div class="hero-text">
+          <span class="eyebrow">COLEÇÃO EM DESTAQUE</span>
+          <h1>Histórias que merecem uma estante inteira</h1>
+          <p>Mangás de todos os gêneros, das séries mais amadas às edições raras para colecionadores. Com frete grátis e 10% off no Pix.</p>
+          <div class="hero-buttons">
+            <a href="categoria.html?g=lancamentos" class="btn btn-gold">Ver lançamentos</a>
+            <a href="categoria.html?g=raridades" class="btn btn-ghost">Explorar raridades</a>
+          </div>
+        </div>
+        <a href="categoria.html?g=raridades" class="hero-covers" aria-label="Ver destaques">
+          <img src="img/capas/one-punch-man-03.jpg" alt="Capa de One Punch Man volume 3">
+          <img src="img/capas/ajin-03.jpg" alt="Capa de Ajin volume 3">
+          <img src="img/capas/ataque-dos-titas-05.jpg" alt="Capa de Ataque dos Titãs volume 5">
+        </a>
+      </div>
+    </section>
+
+    <section class="publishers">
+      <div class="wrap">
+        <span>EDITORAS QUE VOCÊ ENCONTRA AQUI</span>
+        <div class="chips">
+          <a class="chip" href="busca.html?q=Panini">Panini</a>
+          <a class="chip" href="busca.html?q=JBC">JBC</a>
+          <a class="chip" href="busca.html?q=NewPop">NewPop</a>
+          <a class="chip" href="busca.html?q=Devir">Devir</a>
+          <a class="chip" href="busca.html?q=Conrad">Conrad</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section" style="padding-top:64px;padding-bottom:32px">
+      <div class="section-head">
+        <div><h2>Explore por gênero</h2><p>Encontre a próxima leitura pelo estilo que você mais gosta</p></div>
+        <a href="#" class="link-gold" data-open="generos">Ver todas as categorias →</a>
+      </div>
+      <div class="genres" id="generos"></div>
+    </section>
+
+    <section class="wrap section">
+      <div class="section-head">
+        <div><h2>Lançamentos</h2><p>Os volumes mais recentes que chegaram na Seshat</p></div>
+        <a href="categoria.html?g=lancamentos" class="link-gold">Ver todos →</a>
+      </div>
+      <div class="grid" id="lancamentos"></div>
+    </section>
+
+    <section class="section-alt">
+      <div class="wrap section" style="padding-top:56px">
+        <div class="rare-band" id="raridades">
+          <div class="rare-text">
+            <span class="eyebrow">★ RARIDADES</span>
+            <h3 data-r="titulo"></h3>
+            <p data-r="descricao"></p>
+            <span class="price" data-r="preco"></span>
+            <button class="btn btn-gold" data-r="add">Adicionar ao carrinho</button>
+          </div>
+          <div class="rare-covers">
+            <button class="arrow prev" aria-label="Raridade anterior">‹</button>
+            <div style="display:flex;gap:20px;align-items:flex-start" data-r="capas"></div>
+            <button class="arrow next" aria-label="Próxima raridade">›</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap section">
+      <div class="section-head">
+        <div><h2>Mais vendidos</h2><p>Os favoritos dos nossos leitores nesta semana</p></div>
+        <a href="busca.html" class="link-gold">Ver todos →</a>
+      </div>
+      <div class="grid" id="mais-vendidos"></div>
+    </section>
+
+    <section class="section-alt">
+      <div class="wrap benefits">
+        <div class="benefit"><strong>Frete grátis</strong><span>Em compras acima de R$ 199</span></div>
+        <div class="benefit"><strong>10% OFF no Pix</strong><span>Desconto automático no checkout</span></div>
+        <div class="benefit"><strong>Embalagem reforçada</strong><span>Seus mangás chegam sem dobras</span></div>
+        <div class="benefit"><strong>Troca garantida</strong><span>7 dias para devolver</span></div>
+      </div>
+    </section>
+  </main>
+  <div id="footer"></div>
+  <script src="js/data.js"></script>
+  <script src="js/app.js"></script>
+  <script>
+    mountLayout();
+    $('#generos').innerHTML = Object.entries(CATEGORIAS).map(([k, c]) =>
+      `<a class="genre-tile" href="categoria.html?g=${k}" style="--c1:${c.cor[0]};--c2:${c.cor[1]}"><img src="img/capas/${c.capa}.jpg" alt=""><strong>${c.nome}</strong><small style="color:${c.destaque}">${c.sub}</small></a>`).join('');
+    renderCards($('#lancamentos'), HOME.lancamentos);
+    renderCards($('#mais-vendidos'), HOME.maisVendidos);
+
+    // Carrossel de raridades: a capa do meio é a raridade em destaque
+    let atual = 0;
+    const rar = HOME.raridades.map(produto);
+    function showRare() {
+      const p = rar[atual];
+      $('[data-r="titulo"]').textContent = p.titulo;
+      $('[data-r="descricao"]').textContent = p.descricao || `Exemplar de coleção de ${p.autor}, conferido um a um pela equipe da Seshat.`;
+      $('[data-r="preco"]').textContent = brl(p.preco);
+      $('[data-r="add"]').dataset.add = p.id;
+      const ordem = [rar[(atual + rar.length - 1) % rar.length], p, rar[(atual + 1) % rar.length]];
+      $('[data-r="capas"]').innerHTML = ordem.map((x, i) => `<img src="${capa(x)}" alt="Capa de ${esc(x.titulo)}" class="${i === 1 ? 'ativo' : ''}" data-go="${i - 1}">`).join('');
+    }
+    $('.arrow.prev').onclick = () => { atual = (atual + rar.length - 1) % rar.length; showRare(); };
+    $('.arrow.next').onclick = () => { atual = (atual + 1) % rar.length; showRare(); };
+    $('[data-r="capas"]').onclick = e => {
+      const img = e.target.closest('img'); if (!img) return;
+      const go = +img.dataset.go;
+      if (go === 0) location.href = `produto.html?id=${rar[atual].id}`;
+      else { atual = (atual + go + rar.length) % rar.length; showRare(); }
+    };
+    showRare();
+  </script>
+</body>
+</html>
